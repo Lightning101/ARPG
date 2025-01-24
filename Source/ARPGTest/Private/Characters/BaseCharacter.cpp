@@ -37,3 +37,7 @@ void ABaseCharacter::PlayMontage(UAnimMontage *Montage, const FName &Selection)
 		AnimInstance->Montage_JumpToSection(Selection, Montage);
 	}
 }
+
+void ABaseCharacter::AttackEnd()
+{
+}

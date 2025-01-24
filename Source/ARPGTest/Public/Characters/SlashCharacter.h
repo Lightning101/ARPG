@@ -64,15 +64,12 @@ protected:
 
 	//  Animation Montages Start //
 	UPROPERTY(EditDefaultsOnly, Category="Montage")
-	UAnimMontage* AttackMontage;
-	UPROPERTY(EditDefaultsOnly, Category="Montage")
 	UAnimMontage* EquipMontage;
 	//  Animation Montages End //
 
 	//  Animation Play Montages  Start //
 
-	UFUNCTION(BlueprintCallable)
-	void AttackEnd();
+	virtual void AttackEnd() override;
 
 	//  Animation Play Montages  End//
 	UFUNCTION(BlueprintCallable)

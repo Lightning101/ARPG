@@ -32,8 +32,15 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere)
 	AWeapon *EquippedWeapon;
-	virtual void Attack(FName Section){};
+	virtual void Attack(FName Section) {};
 	void PlayMontage(UAnimMontage *Montage, const FName &Selection);
+
+	UFUNCTION(BlueprintCallable)
+	virtual void AttackEnd();
+
+	//  Animation Montages Start //
+	UPROPERTY(EditDefaultsOnly, Category = "Montage")
+	UAnimMontage *AttackMontage;
 
 private:
 };
