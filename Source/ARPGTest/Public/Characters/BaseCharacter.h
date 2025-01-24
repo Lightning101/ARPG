@@ -6,24 +6,31 @@
 #include "GameFramework/Character.h"
 #include "BaseCharacter.generated.h"
 
+class AWeapon;
+
 UCLASS()
 class ARPGTEST_API ABaseCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+	// ====== Unreal Functions Start ======
 public:
-	// Sets default values for this character's properties
 	ABaseCharacter();
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+protected:
+	virtual void BeginPlay() override;
 
+	// ====== Unreal Functions End ======
+
+	// ====== Custom Functions Start ======
+
+public:
+	UFUNCTION(BlueprintCallable)
+	void SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
+
+protected:
+	UPROPERTY(VisibleAnywhere)	
+	AWeapon * EquippedWeapon;
+private:
 };

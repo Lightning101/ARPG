@@ -15,7 +15,7 @@ class UInputAction;
 class UGroomComponent;
 class AItem;
 class UAnimMontage;
-class AWeapon;
+
 
 
 
@@ -83,8 +83,7 @@ protected:
 	void Arm();
 	UFUNCTION(BlueprintCallable)
 	void FinishedEquipping();
-	UFUNCTION(BlueprintCallable)
-	void SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
+
 
 
 private:
@@ -104,8 +103,6 @@ private:
 	ECharacterWeaponEquipedState WeaponEquipedState =  ECharacterWeaponEquipedState::ECWES_Unquipped;
 	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess="true"))
 	ECharacterActionState ActionState =  ECharacterActionState::ECAS_Unoccupied;
-	UPROPERTY(VisibleAnywhere)	
-	AWeapon * EquippedWeapon;
 
 public:
 	FORCEINLINE void SetOverlappingItem(AItem *Item) { OverlappingItem = Item; }
