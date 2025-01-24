@@ -71,8 +71,6 @@ protected:
 
 	//  Animation Play Montages  Start //
 
-	void PlayAttackMontage(const FName& Selection);
-
 	UFUNCTION(BlueprintCallable)
 	void AttackEnd();
 

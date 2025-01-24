@@ -152,16 +152,6 @@ void ASlashCharacter::Input_AttackHeavy(const FInputActionValue &Value)
 	Attack(FName("Attack2"));
 }
 
-void ASlashCharacter::PlayAttackMontage(const FName &Selection)
-{
-	UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && AttackMontage)
-	{
-		AnimInstance->Montage_Play(AttackMontage);
-		AnimInstance->Montage_JumpToSection(Selection, AttackMontage);
-	}
-}
-
 void ASlashCharacter::AttackEnd()
 {
 
@@ -196,7 +186,7 @@ void ASlashCharacter::Attack(FName Section)
 	if (ActionState == ECharacterActionState::ECAS_Unoccupied &&
 		WeaponEquipedState != ECharacterWeaponEquipedState::ECWES_Unquipped)
 	{
-		PlayAttackMontage(Section);
+		PlayMontage(AttackMontage,Section);
 		ActionState = ECharacterActionState::ECAS_Attacking;
 	}
 }
