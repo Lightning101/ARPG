@@ -19,6 +19,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 protected:
+
 	virtual void BeginPlay() override;
 
 	// ====== Unreal Functions End ======
@@ -30,7 +31,9 @@ public:
 	void SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
 
 protected:
-	UPROPERTY(VisibleAnywhere)	
-	AWeapon * EquippedWeapon;
+	UPROPERTY(VisibleAnywhere)
+	AWeapon *EquippedWeapon;
+	virtual void Attack(FName Section) {};
+
 private:
 };

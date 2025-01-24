@@ -37,11 +37,11 @@ protected:
 	virtual void BeginPlay() override;
 
 	//  Input Controls Start //
-	void Move(const FInputActionValue &Value);
-	void Look(const FInputActionValue &Value);
-	void Pickup(const FInputActionValue &Value);
-	void Attack(const FInputActionValue &Value);
-	void AttackHeavy(const FInputActionValue &Value);
+	void Input_Move(const FInputActionValue &Value);
+	void Input_Look(const FInputActionValue &Value);
+	void Input_Pickup(const FInputActionValue &Value);
+	void Input_Attack(const FInputActionValue &Value);
+	void Input_AttackHeavy(const FInputActionValue &Value);
 
 	UPROPERTY(EditAnywhere, Category = "Input Mappings")
 	UInputMappingContext *DefaultInputMapping;
@@ -84,6 +84,7 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void FinishedEquipping();
 
+	virtual void Attack(FName Section) override;
 
 
 private:

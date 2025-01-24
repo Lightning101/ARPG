@@ -69,15 +69,15 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputComp
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	UEnhancedInputComponent *EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
 
-	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Move);
-	EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Look);
+	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Input_Move);
+	EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Input_Look);
 	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
-	EnhancedInputComponent->BindAction(PickupAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Pickup);
-	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Attack);
-	EnhancedInputComponent->BindAction(AttackHeavyAction, ETriggerEvent::Triggered, this, &ASlashCharacter::AttackHeavy);
+	EnhancedInputComponent->BindAction(PickupAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Input_Pickup);
+	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Input_Attack);
+	EnhancedInputComponent->BindAction(AttackHeavyAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Input_AttackHeavy);
 }
 
-void ASlashCharacter::Move(const FInputActionValue &Value)
+void ASlashCharacter::Input_Move(const FInputActionValue &Value)
 {
 	if (ActionState != ECharacterActionState::ECAS_Unoccupied)
 		return;
@@ -100,14 +100,14 @@ void ASlashCharacter::Move(const FInputActionValue &Value)
 		}
 	}
 }
-void ASlashCharacter::Look(const FInputActionValue &Value)
+void ASlashCharacter::Input_Look(const FInputActionValue &Value)
 {
 	FVector2D LookVector = Value.Get<FVector2D>();
 	AddControllerPitchInput(LookVector.Y);
 	AddControllerYawInput(LookVector.X);
 }
 
-void ASlashCharacter::Pickup(const FInputActionValue &Value)
+void ASlashCharacter::Input_Pickup(const FInputActionValue &Value)
 {
 
 	if (AWeapon *OverlappingWeapon = Cast<AWeapon>(OverlappingItem))
@@ -142,26 +142,14 @@ void ASlashCharacter::Pickup(const FInputActionValue &Value)
 	}
 }
 
-void ASlashCharacter::Attack(const FInputActionValue &Value)
+void ASlashCharacter::Input_Attack(const FInputActionValue &Value)
 {
-
-	if (ActionState == ECharacterActionState::ECAS_Unoccupied &&
-		WeaponEquipedState != ECharacterWeaponEquipedState::ECWES_Unquipped)
-	{
-		PlayAttackMontage(FName("Attack1"));
-		ActionState = ECharacterActionState::ECAS_Attacking;
-	}
+	Attack(FName("Attack1"));
 }
 
-void ASlashCharacter::AttackHeavy(const FInputActionValue &Value)
+void ASlashCharacter::Input_AttackHeavy(const FInputActionValue &Value)
 {
-
-	if (ActionState == ECharacterActionState::ECAS_Unoccupied &&
-		WeaponEquipedState != ECharacterWeaponEquipedState::ECWES_Unquipped)
-	{
-		PlayAttackMontage(FName("Attack2"));
-		ActionState = ECharacterActionState::ECAS_Attacking;
-	}
+	Attack(FName("Attack2"));
 }
 
 void ASlashCharacter::PlayAttackMontage(const FName &Selection)
@@ -203,3 +191,12 @@ void ASlashCharacter::FinishedEquipping()
 	}
 }
 
+void ASlashCharacter::Attack(FName Section)
+{
+	if (ActionState == ECharacterActionState::ECAS_Unoccupied &&
+		WeaponEquipedState != ECharacterWeaponEquipedState::ECWES_Unquipped)
+	{
+		PlayAttackMontage(Section);
+		ActionState = ECharacterActionState::ECAS_Attacking;
+	}
+}
