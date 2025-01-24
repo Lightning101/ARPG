@@ -72,3 +72,17 @@ Plugins/**/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+
+#ignore content excpet blueprints
+/Content
+
+
+
+
+/.vscode
+/Assets
+/DerivedDataCache
+/Intermediate
+/Saved
+/Config
+
