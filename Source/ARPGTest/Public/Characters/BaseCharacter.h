@@ -4,12 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Interfaces/HitInterface.h"
 #include "BaseCharacter.generated.h"
 
 class AWeapon;
 class UAnimMontage;
+class UAttributeComponent;
+class USoundBase;
 UCLASS()
-class ARPGTEST_API ABaseCharacter : public ACharacter
+class ARPGTEST_API ABaseCharacter : public ACharacter, public IHitInterface
 {
 	GENERATED_BODY()
 
@@ -33,7 +36,10 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	AWeapon *EquippedWeapon;
 	virtual void Attack(FName Section) {};
-	void PlayMontage(UAnimMontage *Montage, const FName &Selection);
+	virtual void Die();
+
+	void PlayMontage(UAnimMontage *Montage, const FName &Selection) const;
+	virtual void DirectionalHitReact(const FVector &ImpactPoint);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void AttackEnd();
@@ -41,6 +47,21 @@ protected:
 	//  Animation Montages Start //
 	UPROPERTY(EditDefaultsOnly, Category = "Montage")
 	UAnimMontage *AttackMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Montage")
+	UAnimMontage *HitReactMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Montage")
+	UAnimMontage *DeathMontage;
+
+	UPROPERTY(EditAnywhere, Category = "VisualEffects")
+	UParticleSystem *HitParticles;
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	USoundBase *HitSound;
+	//  Animation Montages End //
+
+	// Components Start //
+	UPROPERTY(VisibleAnywhere)
+	UAttributeComponent *Attributes;
+	// Components End //
 
 private:
 };

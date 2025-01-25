@@ -13,6 +13,7 @@
 #include "AIController.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "Perception/PawnSensingComponent.h"
+#include "Items/Weapons/Weapon.h"
 
 // Sets default values
 AEnemy::AEnemy()
@@ -29,10 +30,7 @@ AEnemy::AEnemy()
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetGenerateOverlapEvents(true);
-
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
-
-	Attributes = CreateDefaultSubobject<UAttributeComponent>(TEXT("Attributes"));
 
 	HealthBarWidget = CreateDefaultSubobject<UHealthBarComponent>(TEXT("HealthBar"));
 	HealthBarWidget->SetupAttachment(GetRootComponent());
@@ -54,6 +52,13 @@ void AEnemy::BeginPlay()
 	if (PawnSensing)
 	{
 		PawnSensing->OnSeePawn.AddDynamic(this, &AEnemy::OnPawnSeen);
+	}
+	UWorld *World = GetWorld();
+	if (World && WeaponClass)
+	{
+		AWeapon *Weapon = World->SpawnActor<AWeapon>(WeaponClass);
+		Weapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
+		EquippedWeapon = Weapon;
 	}
 }
 
@@ -112,6 +117,7 @@ void AEnemy::GetHit_Implementation(const FVector &ImpactPoint)
 {
 	if (HealthBarWidget)
 		HealthBarWidget->SetVisibility(true);
+
 	if (Attributes && Attributes->IsAlive())
 	{
 		DirectionalHitReact(ImpactPoint);
@@ -132,16 +138,6 @@ void AEnemy::GetHit_Implementation(const FVector &ImpactPoint)
 	}
 }
 
-void AEnemy::PlayMontage(UAnimMontage *Montage, const FName &SectionName) const
-{
-	UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && Montage)
-	{
-		AnimInstance->Montage_Play(Montage);
-		AnimInstance->Montage_JumpToSection(SectionName, Montage);
-	}
-}
-
 void AEnemy::Die()
 {
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -157,51 +153,6 @@ void AEnemy::Die()
 		FString SectionName = FString::Printf(TEXT("Death%d"), SectionIndex);
 		PlayMontage(DeathMontage, FName(*SectionName));
 	}
-}
-void AEnemy::DirectionalHitReact(const FVector &ImpactPoint)
-{
-
-	// DRAW_SPHERE_TEMP_COLOR_SIZE(ImpactPoint, FColor::Red, 10.f, 2.f);
-
-	const FVector Forward = GetActorForwardVector();
-	const FVector ImpactLowered = FVector(ImpactPoint.X, ImpactPoint.Y, GetActorLocation().Z);
-	const FVector ToHit = (ImpactLowered - GetActorLocation()).GetSafeNormal();
-
-	// Forward * ToHit = |Forward||ToHit| * cos(theta)
-	// |Forward| = 1, |ToHit| = 1, so Forward * ToHit = cos(theta)
-	double Theta = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Forward, ToHit)));
-
-	const FVector CrossProduct = FVector::CrossProduct(Forward, ToHit);
-	if (CrossProduct.Z < 0)
-	{
-		Theta *= -1.f;
-	}
-
-	// if (GEngine)
-	// {
-	// 	GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Emerald, FString::Printf(TEXT("Theta value %f"), Theta));
-	// }
-
-	// UKismetSystemLibrary::DrawDebugArrow(GetWorld(), GetActorLocation(), GetActorLocation() + Forward * 100.f, 100.f, FColor::Green, 5.f);
-	// UKismetSystemLibrary::DrawDebugArrow(GetWorld(), GetActorLocation(), GetActorLocation() + ToHit * 100.f, 100.f, FColor::Red, 5.f);
-	// UKismetSystemLibrary::DrawDebugArrow(GetWorld(), GetActorLocation(), GetActorLocation() + CrossProduct * 100.f, 100.f, FColor::Blue, 5.f);
-
-	FName Section = FName("React_Back");
-
-	if (Theta >= -45.f and Theta <= 45.f)
-	{
-		Section = FName("React_Front");
-	}
-	else if (Theta >= -135 and Theta < -45.f)
-	{
-		Section = FName("React_Left");
-	}
-	else if (Theta >= 45.f && Theta < 135.f)
-	{
-		Section = FName("React_Right");
-	}
-
-	PlayMontage(HitReactMontage, Section);
 }
 
 bool AEnemy::IsInTargetRange(AActor *Target, float Radius)
@@ -235,7 +186,10 @@ void AEnemy::PatrolTimerFinished()
 void AEnemy::MoveToTarget(AActor *Target, float AcceptanceRadius)
 {
 	if (!EnemyController || !Target)
+	{
+		EnemyController->StopMovement();
 		return;
+	}
 
 	FAIMoveRequest MoveRequest;
 	MoveRequest.SetGoalActor(Target);

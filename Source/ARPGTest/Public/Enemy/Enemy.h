@@ -4,19 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "Characters/BaseCharacter.h"
-#include "Interfaces/HitInterface.h"
 #include "Characters/CharacterTypes.h"
 #include "Enemy.generated.h"
 
-class UAnimMontage;
-class USoundBase;
-class UAttributeComponent;
 class UHealthBarComponent;
 class AAIController;
 class UPawnSensingComponent;
+class AWeapon;
 
 UCLASS()
-class ARPGTEST_API AEnemy : public ABaseCharacter, public IHitInterface
+class ARPGTEST_API AEnemy : public ABaseCharacter
 {
 	GENERATED_BODY()
 
@@ -39,21 +36,9 @@ protected:
 	virtual void BeginPlay() override;
 
 	//  Animation Montages Start //
-	UPROPERTY(EditDefaultsOnly, Category = "Montage")
-	UAnimMontage *HitReactMontage;
-	UPROPERTY(EditDefaultsOnly, Category = "Montage")
-	UAnimMontage *DeathMontage;
-
-	void PlayMontage(UAnimMontage *Montage, const FName &SectionName) const;
-	void Die();
+	virtual void Die() override;
 
 	//  Animation Montages End //
-	UPROPERTY(EditAnywhere, Category = "Sound")
-	USoundBase *HitSound;
-
-	UPROPERTY(EditAnywhere, Category = "VisualEffects")
-	UParticleSystem *HitParticles;
-
 	UPROPERTY(BlueprintReadOnly)
 	EDeathPose DeathPose = EDeathPose::EDP_Alive;
 
@@ -66,13 +51,11 @@ protected:
 	void CheckCombatTarget();
 
 private:
-	void DirectionalHitReact(const FVector &ImpactPoint);
+
 
 	/**
 	 * Components
 	 */
-	UPROPERTY(VisibleAnywhere)
-	UAttributeComponent *Attributes;
 	UPROPERTY(VisibleAnywhere)
 	UHealthBarComponent *HealthBarWidget;
 	UPROPERTY(VisibleAnywhere)
@@ -84,8 +67,11 @@ private:
 	UPROPERTY()
 	AActor *CombatTarget;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> WeaponClass;
+
 	/**
-	 * Navigation
+	 * Navigation/AI Start
 	 */
 
 	UPROPERTY(EditInstanceOnly, Category = "AI Navigation")
@@ -108,4 +94,8 @@ private:
 
 
 	EEnemyState EnemyState = EEnemyState::EES_Patroling;
+
+	/**
+	 * Navigation/AI End
+	 */
 };
