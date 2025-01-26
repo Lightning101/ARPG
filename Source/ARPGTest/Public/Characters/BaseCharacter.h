@@ -37,6 +37,7 @@ protected:
 	AWeapon *EquippedWeapon;
 	virtual void Attack(FName Section) {};
 	virtual void Die();
+	bool IsAlive();
 
 	void PlayMontage(UAnimMontage *Montage, const FName &Selection) const;
 	virtual void DirectionalHitReact(const FVector &ImpactPoint);
@@ -51,11 +52,10 @@ protected:
 	UAnimMontage *HitReactMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montage")
 	UAnimMontage *DeathMontage;
+	void PlayHitSound(const FVector& ImpactPoint);
+	void SpawnHitParticles(const FVector& ImpactPoint);
+	virtual void HandleDamage(float DamageAmount);
 
-	UPROPERTY(EditAnywhere, Category = "VisualEffects")
-	UParticleSystem *HitParticles;
-	UPROPERTY(EditAnywhere, Category = "Sound")
-	USoundBase *HitSound;
 	//  Animation Montages End //
 
 	// Components Start //
@@ -63,5 +63,11 @@ protected:
 	UAttributeComponent *Attributes;
 	// Components End //
 
+
+
 private:
+	UPROPERTY(EditAnywhere, Category = "VisualEffects")
+	UParticleSystem *HitParticles;
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	USoundBase *HitSound;
 };

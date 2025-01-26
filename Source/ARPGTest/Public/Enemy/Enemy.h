@@ -22,8 +22,6 @@ public:
 	AEnemy();
 	virtual void Tick(float DeltaTime) override;
 
-	virtual void SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent) override;
-
 	virtual void GetHit_Implementation(const FVector &ImpactPoint) override;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const &DamageEvent, class AController *EventInstigator, AActor *DamageCauser) override;
@@ -41,6 +39,8 @@ protected:
 	virtual void Die() override;
 
 	virtual void Attack(FName Section) override;
+
+	virtual void HandleDamage(float DamageAmmount) override;
 
 	//  Animation Montages End //
 	UPROPERTY(BlueprintReadOnly)
@@ -98,5 +98,35 @@ private:
 
 	/**
 	 * Navigation/AI End
+	 */
+
+	/**
+	 * AI Behavior Start
+	 */
+
+	void SetHealthBarVisibility(bool Visibility);
+	void LoseInterest();
+	void StartPatrolling();
+	void ChaseTarget();
+	void ClearTimer(FTimerHandle TimerHandle);
+
+	// Combat Start
+	FTimerHandle AttackTimer;
+	void StartAttackTimer();
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float AttackTimeMin = 0.5f;
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float AttackTimeMax = 0.5f;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float PatrolSpeed = 125.f;
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float ChasingSpeed = 300.f;
+
+	// Combat End
+
+	/**
+	 * AI Behavior End
 	 */
 };

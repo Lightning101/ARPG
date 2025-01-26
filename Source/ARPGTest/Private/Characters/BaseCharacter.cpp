@@ -5,6 +5,7 @@
 
 #include "Components/BoxComponent.h"
 #include "Components/AttributeComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 ABaseCharacter::ABaseCharacter()
 {
@@ -35,6 +36,10 @@ void ABaseCharacter::Die()
 {
 }
 
+bool ABaseCharacter::IsAlive()
+{
+	return Attributes && Attributes->IsAlive();
+}
 void ABaseCharacter::PlayMontage(UAnimMontage *Montage, const FName &Selection) const
 {
 	UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
@@ -47,8 +52,6 @@ void ABaseCharacter::PlayMontage(UAnimMontage *Montage, const FName &Selection) 
 
 void ABaseCharacter::DirectionalHitReact(const FVector &ImpactPoint)
 {
-
-	// DRAW_SPHERE_TEMP_COLOR_SIZE(ImpactPoint, FColor::Red, 10.f, 2.f);
 
 	const FVector Forward = GetActorForwardVector();
 	const FVector ImpactLowered = FVector(ImpactPoint.X, ImpactPoint.Y, GetActorLocation().Z);
@@ -63,6 +66,7 @@ void ABaseCharacter::DirectionalHitReact(const FVector &ImpactPoint)
 	{
 		Theta *= -1.f;
 	}
+	// DRAW_SPHERE_TEMP_COLOR_SIZE(ImpactPoint, FColor::Red, 10.f, 2.f);
 
 	// if (GEngine)
 	// {
@@ -93,4 +97,26 @@ void ABaseCharacter::DirectionalHitReact(const FVector &ImpactPoint)
 
 void ABaseCharacter::AttackEnd()
 {
+}
+
+void ABaseCharacter::PlayHitSound(const FVector &ImpactPoint)
+{
+	if (HitSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, HitSound, ImpactPoint);
+	}
+}
+
+void ABaseCharacter::SpawnHitParticles(const FVector &ImpactPoint)
+{
+	if (HitParticles)
+	{
+		UGameplayStatics::SpawnEmitterAttached(HitParticles, GetMesh(), FName(""), ImpactPoint, FRotator::ZeroRotator, EAttachLocation::KeepWorldPosition);
+	}
+}
+
+void ABaseCharacter::HandleDamage(float DamageAmount)
+{
+	if (Attributes)
+		Attributes->ReceiveDamage(DamageAmount);
 }
