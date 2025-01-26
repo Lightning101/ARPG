@@ -27,6 +27,8 @@ public:
 	virtual void GetHit_Implementation(const FVector &ImpactPoint) override;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const &DamageEvent, class AController *EventInstigator, AActor *DamageCauser) override;
+	virtual void Destroyed() override;
+
 	UPROPERTY(EditAnywhere)
 	double CombatRadius = 500.f;
 	UPROPERTY(EditAnywhere)
@@ -38,21 +40,23 @@ protected:
 	//  Animation Montages Start //
 	virtual void Die() override;
 
+	virtual void Attack(FName Section) override;
+
 	//  Animation Montages End //
 	UPROPERTY(BlueprintReadOnly)
-	EDeathPose DeathPose = EDeathPose::EDP_Alive;
+	EDeathPose DeathPose;
+	UPROPERTY(BlueprintReadOnly)
+	EEnemyState EnemyState = EEnemyState::EES_Patroling;
 
 	bool IsInTargetRange(AActor *Target, float Radius);
 
-	void MoveToTarget(AActor *Target,float AcceptanceRadius = 15.f);
+	void MoveToTarget(AActor *Target, float AcceptanceRadius = 15.f);
 
 	AActor *SelectNewPatrolTarget();
 	void CheckPatrolTarget();
 	void CheckCombatTarget();
 
 private:
-
-
 	/**
 	 * Components
 	 */
@@ -91,9 +95,6 @@ private:
 
 	FTimerHandle PatrolTimer;
 	void PatrolTimerFinished();
-
-
-	EEnemyState EnemyState = EEnemyState::EES_Patroling;
 
 	/**
 	 * Navigation/AI End

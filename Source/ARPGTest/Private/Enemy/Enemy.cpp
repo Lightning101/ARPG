@@ -14,6 +14,7 @@
 #include "Navigation/PathFollowingComponent.h"
 #include "Perception/PawnSensingComponent.h"
 #include "Items/Weapons/Weapon.h"
+#include "Animation/AnimMontage.h"
 
 // Sets default values
 AEnemy::AEnemy()
@@ -104,7 +105,14 @@ void AEnemy::CheckCombatTarget()
 	else if (EnemyState != EEnemyState::EES_Attacking && IsInTargetRange(CombatTarget, AttackRadius + (GetCapsuleComponent()->GetScaledCapsuleRadius() * 2)))
 	{
 		EnemyState = EEnemyState::EES_Attacking;
-		// !TODO Attack Montage
+		UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance && AttackMontage)
+		{
+			if (!AnimInstance->Montage_IsPlaying(AttackMontage))
+			{
+				Attack(FName());
+			}
+		}
 	}
 }
 // Called to bind functionality to input
@@ -155,6 +163,15 @@ void AEnemy::Die()
 	}
 }
 
+void AEnemy::Attack(FName Section)
+{
+	if (AttackMontage)
+	{
+		int32 SectionIndex = FMath::RandRange(1, AttackMontage->GetNumSections());
+		FString SectionName = FString::Printf(TEXT("Attack%d"), SectionIndex);
+		PlayMontage(AttackMontage, FName(*SectionName));
+	}
+}
 bool AEnemy::IsInTargetRange(AActor *Target, float Radius)
 {
 	if (Target == nullptr)
@@ -178,6 +195,14 @@ float AEnemy::TakeDamage(float DamageAmount, struct FDamageEvent const &DamageEv
 	return DamageAmount;
 }
 
+void AEnemy::Destroyed()
+{
+	Super::Destroy();
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->Destroy();
+	}
+}
 void AEnemy::PatrolTimerFinished()
 {
 	MoveToTarget(PatrolTarget);
