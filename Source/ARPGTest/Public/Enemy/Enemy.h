@@ -28,7 +28,7 @@ public:
 	virtual void Destroyed() override;
 
 	UPROPERTY(EditAnywhere)
-	double CombatRadius = 500.f;
+	double CombatRadius = 1000.f;
 	UPROPERTY(EditAnywhere)
 	float AttackRadius = 150.f;
 
@@ -39,6 +39,7 @@ protected:
 	virtual void Die() override;
 
 	virtual void Attack(FName Section) override;
+	virtual void AttackEnd() override;
 
 	virtual void HandleDamage(float DamageAmmount) override;
 
@@ -55,6 +56,9 @@ protected:
 	AActor *SelectNewPatrolTarget();
 	void CheckPatrolTarget();
 	void CheckCombatTarget();
+
+	UPROPERTY(EditAnywhere)
+	float DeathLifeSpan = 8.f;
 
 private:
 	/**

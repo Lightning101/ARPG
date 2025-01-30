@@ -91,32 +91,36 @@ void AEnemy::CheckPatrolTarget()
 void AEnemy::CheckCombatTarget()
 {
 	bool NotInCombatRange = !IsInTargetRange(CombatTarget, CombatRadius);
+	float ModifiedAttackRange = AttackRadius + (GetCapsuleComponent()->GetScaledCapsuleRadius() * 2);
 
 	bool NotChasingAndNotInAttackRange = EnemyState != EEnemyState::EES_Chasing &&
-										 !IsInTargetRange(CombatTarget, AttackRadius);
+										 !IsInTargetRange(CombatTarget, ModifiedAttackRange);
 
 	bool NotAttackingAndInAttackRange = EnemyState != EEnemyState::EES_Attacking &&
 										IsInTargetRange(
-											CombatTarget,
-											AttackRadius + (GetCapsuleComponent()->GetScaledCapsuleRadius() * 2));
+											CombatTarget, ModifiedAttackRange);
 
 	if (NotInCombatRange)
 	{
 		// Outside combat radius
 		ClearTimer(AttackTimer);
 		LoseInterest();
-		if (EnemyState == EEnemyState::EES_Engaged)
+		if (EnemyState != EEnemyState::EES_Engaged)
 			StartPatrolling();
 	}
 	else if (NotChasingAndNotInAttackRange)
 	{
 		ClearTimer(AttackTimer);
-		if (EnemyState == EEnemyState::EES_Engaged)
+		if (EnemyState != EEnemyState::EES_Engaged)
 			ChaseTarget();
 	}
 	else if (NotAttackingAndInAttackRange)
 	{
-		StartAttackTimer();
+		if (EnemyState != EEnemyState::EES_Engaged)
+		{
+			EnemyState = EEnemyState::EES_Attacking;
+			StartAttackTimer();
+		}
 	}
 }
 
@@ -135,13 +139,16 @@ void AEnemy::GetHit_Implementation(const FVector &ImpactPoint)
 void AEnemy::Die()
 {
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	SetLifeSpan(3.f);
 	SetHealthBarVisibility(false);
+	ClearTimer(AttackTimer);
+	GetCharacterMovement()->bOrientRotationToMovement = false;
 
-	if (DeathMontage)
+	SetLifeSpan(DeathLifeSpan);
+	EnemyState = EEnemyState::EES_Dead;
+	if (DeathMontage && DeathMontage->GetNumSections() > 0)
 	{
 		int32 SectionIndex = FMath::RandRange(1, DeathMontage->GetNumSections());
-		DeathPose = EDeathPose((uint8)SectionIndex);
+		DeathPose = static_cast<EDeathPose>(SectionIndex - 1);
 		FString SectionName = FString::Printf(TEXT("Death%d"), SectionIndex);
 		PlayMontage(DeathMontage, FName(*SectionName));
 	}
@@ -149,12 +156,18 @@ void AEnemy::Die()
 
 void AEnemy::Attack(FName Section)
 {
-	if (AttackMontage)
+	if (AttackMontage && AttackMontage->GetNumSections() > 0)
 	{
+		EnemyState = EEnemyState::EES_Engaged;
 		int32 SectionIndex = FMath::RandRange(1, AttackMontage->GetNumSections());
 		FString SectionName = FString::Printf(TEXT("Attack%d"), SectionIndex);
 		PlayMontage(AttackMontage, FName(*SectionName));
 	}
+}
+void AEnemy::AttackEnd()
+{
+	EnemyState = EEnemyState::EES_NoState;
+	CheckCombatTarget();
 }
 void AEnemy::HandleDamage(float DamageAmount)
 {
@@ -195,7 +208,7 @@ void AEnemy::PatrolTimerFinished()
 void AEnemy::SetHealthBarVisibility(bool Visibility)
 {
 	if (HealthBarWidget)
-		HealthBarWidget->SetVisibility(false);
+		HealthBarWidget->SetVisibility(Visibility);
 }
 
 void AEnemy::LoseInterest()
@@ -225,7 +238,6 @@ void AEnemy::ClearTimer(FTimerHandle TimerHandle)
 
 void AEnemy::StartAttackTimer()
 {
-	EnemyState = EEnemyState::EES_Attacking;
 	const float AttackTime = FMath::RandRange(AttackTimeMin, AttackTimeMax);
 	FTimerDelegate ExplosionDelegate = FTimerDelegate::CreateLambda([this]()
 																	{ Attack(FName()); });

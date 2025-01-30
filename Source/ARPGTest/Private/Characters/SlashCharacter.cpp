@@ -79,8 +79,6 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputComp
 
 void ASlashCharacter::Input_Move(const FInputActionValue &Value)
 {
-	if (ActionState != ECharacterActionState::ECAS_Unoccupied)
-		return;
 	if (Controller && ViewCamera)
 	{
 		FVector2D MoveVector = Value.Get<FVector2D>();
