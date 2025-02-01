@@ -34,11 +34,25 @@ void ABaseCharacter::SetWeaponCollisionEnabled(ECollisionEnabled::Type Collision
 
 void ABaseCharacter::Die()
 {
+	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 bool ABaseCharacter::IsAlive()
 {
 	return Attributes && Attributes->IsAlive();
+}
+void ABaseCharacter::GetHit_Implementation(const AActor* InitiatingActor, const FVector& ImpactPoint)
+{
+	if (IsAlive() && InitiatingActor)
+		DirectionalHitReact(InitiatingActor->GetActorLocation());
+	else
+		Die();
+
+	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
+	StopMontage(AttackMontage);
+
+	PlayHitSound(ImpactPoint);
+	SpawnHitParticles(ImpactPoint);
 }
 void ABaseCharacter::PlayMontage(UAnimMontage *Montage, const FName &Selection) const
 {
@@ -47,6 +61,16 @@ void ABaseCharacter::PlayMontage(UAnimMontage *Montage, const FName &Selection) 
 	{
 		AnimInstance->Montage_Play(Montage);
 		AnimInstance->Montage_JumpToSection(Selection, Montage);
+	}
+}
+
+void ABaseCharacter::StopMontage(UAnimMontage* Montage)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && Montage)
+	{
+		AnimInstance->Montage_Stop(0.25f,Montage);
+
 	}
 }
 
@@ -97,6 +121,25 @@ void ABaseCharacter::DirectionalHitReact(const FVector &ImpactPoint)
 
 void ABaseCharacter::AttackEnd()
 {
+}
+
+FVector ABaseCharacter::UpdateTranslationWarping() const
+{
+	if (CombatTarget) {
+		const FVector& CombatTargetLocation = CombatTarget->GetActorLocation();
+		FVector Location = (GetActorLocation() - CombatTargetLocation).GetSafeNormal();
+		Location *= MotionWarpingTranslationBuffer;
+		return CombatTargetLocation + Location;
+	}
+	return FVector();
+}
+
+FVector ABaseCharacter::UpdateRotationWarping() const
+{
+	if (CombatTarget) {
+		return CombatTarget->GetActorLocation();
+	}
+	return FVector();
 }
 
 void ABaseCharacter::PlayHitSound(const FVector &ImpactPoint)

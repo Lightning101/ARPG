@@ -34,24 +34,33 @@ public:
 
 protected:
 	UPROPERTY(VisibleAnywhere)
-	AWeapon *EquippedWeapon;
+	AWeapon* EquippedWeapon;
 	virtual void Attack(FName Section) {};
 	virtual void Die();
 	bool IsAlive();
 
-	void PlayMontage(UAnimMontage *Montage, const FName &Selection) const;
-	virtual void DirectionalHitReact(const FVector &ImpactPoint);
+	virtual void GetHit_Implementation(const AActor* InitiatingActor, const FVector& ImpactPoint) override;
+
+	void PlayMontage(UAnimMontage* Montage, const FName& Selection) const;
+	void StopMontage(UAnimMontage* Montage);
+	virtual void DirectionalHitReact(const FVector& ImpactPoint);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void AttackEnd();
+	UFUNCTION(BlueprintCallable)
+	FVector UpdateTranslationWarping() const;
+	UFUNCTION(BlueprintCallable)
+	FVector UpdateRotationWarping() const;
+	UPROPERTY(BlueprintReadOnly, Category = "Combat")
+	AActor* CombatTarget;
 
 	//  Animation Montages Start //
 	UPROPERTY(EditDefaultsOnly, Category = "Montage")
-	UAnimMontage *AttackMontage;
+	UAnimMontage* AttackMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montage")
-	UAnimMontage *HitReactMontage;
+	UAnimMontage* HitReactMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montage")
-	UAnimMontage *DeathMontage;
+	UAnimMontage* DeathMontage;
 	void PlayHitSound(const FVector& ImpactPoint);
 	void SpawnHitParticles(const FVector& ImpactPoint);
 	virtual void HandleDamage(float DamageAmount);
@@ -60,14 +69,18 @@ protected:
 
 	// Components Start //
 	UPROPERTY(VisibleAnywhere)
-	UAttributeComponent *Attributes;
+	UAttributeComponent* Attributes;
 	// Components End //
 
 
 
 private:
 	UPROPERTY(EditAnywhere, Category = "VisualEffects")
-	UParticleSystem *HitParticles;
+	UParticleSystem* HitParticles;
 	UPROPERTY(EditAnywhere, Category = "Sound")
-	USoundBase *HitSound;
+	USoundBase* HitSound;
+
+	
+	UPROPERTY(EditAnywhere, Category="Combat")
+	float MotionWarpingTranslationBuffer= 75.f;
 };

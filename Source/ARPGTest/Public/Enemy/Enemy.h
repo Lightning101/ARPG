@@ -25,7 +25,7 @@ public:
 	AEnemy();
 	/** <Actor> */
 	virtual void Tick(float DeltaTime) override;
-	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const &DamageEvent, class AController *EventInstigator, AActor *DamageCauser) override;
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	virtual void Destroyed() override;
 	/** </Actor> */
 
@@ -39,7 +39,7 @@ public:
 	//  Combat  Start
 
 	/** <IHitInterface */
-	virtual void GetHit_Implementation(const FVector &ImpactPoint) override;
+	virtual void GetHit_Implementation(const AActor* InitiatingActor, const FVector& ImpactPoint) override;
 	/** </IHitInterface */
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
@@ -55,6 +55,7 @@ protected:
 	virtual void AttackEnd() override;
 	virtual void HandleDamage(float DamageAmmount) override;
 
+
 	// ABaseCharacter Overrides End //
 
 	// Enemy States Start //
@@ -69,9 +70,9 @@ private:
 	/** Components Start */
 
 	UPROPERTY(VisibleAnywhere)
-	UHealthBarComponent *HealthBarWidget;
+	UHealthBarComponent* HealthBarWidget;
 	UPROPERTY(VisibleAnywhere)
-	UPawnSensingComponent *PawnSensing;
+	UPawnSensingComponent* PawnSensing;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> WeaponClass;
 
@@ -91,19 +92,19 @@ private:
 	void ChaseTarget();
 	void ClearTimer(FTimerHandle TimerHandle);
 
-	bool IsInTargetRange(AActor *Target, float Radius);
+	bool IsInTargetRange(AActor* Target, float Radius);
 
-	void MoveToTarget(AActor *Target, float AcceptanceRadius = 15.f);
+	void MoveToTarget(AActor* Target, float AcceptanceRadius = 15.f);
 
-	AActor *SelectNewPatrolTarget();
+	AActor* SelectNewPatrolTarget();
 
 	UPROPERTY(EditInstanceOnly, Category = "AI Navigation")
-	AActor *PatrolTarget;
+	AActor* PatrolTarget;
 	UPROPERTY(EditInstanceOnly, Category = "AI Navigation")
-	TArray<AActor *> PatrolTargets;
+	TArray<AActor*> PatrolTargets;
 
 	UPROPERTY()
-	AAIController *EnemyController;
+	AAIController* EnemyController;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	double PatrolRadius = 200.f;
@@ -118,10 +119,8 @@ private:
 	void StartAttackTimer();
 
 	UFUNCTION()
-	void OnPawnSeen(APawn *Pawn);
+	void OnPawnSeen(APawn* Pawn);
 
-	UPROPERTY()
-	AActor *CombatTarget;
 
 	FTimerHandle AttackTimer;
 

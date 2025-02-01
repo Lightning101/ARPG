@@ -26,7 +26,7 @@ ASlashCharacter::ASlashCharacter()
 
 	GetMesh()->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
 	GetMesh()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility,ECollisionResponse::ECR_Block);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
 	GetMesh()->SetGenerateOverlapEvents(true);
 
@@ -54,9 +54,9 @@ void ASlashCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	Tags.Add(FName("EngageableTarget"));
-	if (APlayerController *PlayerController = Cast<APlayerController>(GetController()))
+	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
-		if (UEnhancedInputLocalPlayerSubsystem *Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			if (DefaultInputMapping)
 			{
@@ -73,10 +73,10 @@ void ASlashCharacter::Tick(float DeltaTime)
 }
 
 // Called to bind functionality to input
-void ASlashCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
+void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	UEnhancedInputComponent *EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
+	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
 
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Input_Move);
 	EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Input_Look);
@@ -86,13 +86,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputComp
 	EnhancedInputComponent->BindAction(AttackHeavyAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Input_AttackHeavy);
 }
 
-void ASlashCharacter::GetHit_Implementation(const FVector& ImpactPoint)
-{
-	PlayHitSound(ImpactPoint);
-	SpawnHitParticles(ImpactPoint);
-}
-
-void ASlashCharacter::Input_Move(const FInputActionValue &Value)
+void ASlashCharacter::Input_Move(const FInputActionValue& Value)
 {
 	if (Controller && ViewCamera)
 	{
@@ -105,25 +99,25 @@ void ASlashCharacter::Input_Move(const FInputActionValue &Value)
 
 		if (MoveVector.X != 0)
 		{
-			AddMovementInput(PlayerRight, MoveVector.X);
+			AddMovementInput(PlayerForward, MoveVector.X);
 		}
 		if (MoveVector.Y != 0)
 		{
-			AddMovementInput(PlayerForward , MoveVector.Y);
+			AddMovementInput(PlayerRight, MoveVector.Y);
 		}
 	}
 }
-void ASlashCharacter::Input_Look(const FInputActionValue &Value)
+void ASlashCharacter::Input_Look(const FInputActionValue& Value)
 {
 	FVector2D LookVector = Value.Get<FVector2D>();
 	AddControllerPitchInput(LookVector.Y);
 	AddControllerYawInput(LookVector.X);
 }
 
-void ASlashCharacter::Input_Pickup(const FInputActionValue &Value)
+void ASlashCharacter::Input_Pickup(const FInputActionValue& Value)
 {
 
-	if (AWeapon *OverlappingWeapon = Cast<AWeapon>(OverlappingItem))
+	if (AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem))
 	{
 		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
 		WeaponEquipedState = ECharacterWeaponEquipedState::ECWES_EquippedOneHandedWeapon;
@@ -135,7 +129,7 @@ void ASlashCharacter::Input_Pickup(const FInputActionValue &Value)
 
 		if (ActionState == ECharacterActionState::ECAS_Unoccupied)
 		{
-			UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 			if (AnimInstance && EquipMontage)
 			{
 				ActionState = ECharacterActionState::ECAS_EquippingWeapon;
@@ -155,12 +149,13 @@ void ASlashCharacter::Input_Pickup(const FInputActionValue &Value)
 	}
 }
 
-void ASlashCharacter::Input_Attack(const FInputActionValue &Value)
+void ASlashCharacter::Input_Attack(const FInputActionValue& Value)
 {
+
 	Attack(FName("Attack1"));
 }
 
-void ASlashCharacter::Input_AttackHeavy(const FInputActionValue &Value)
+void ASlashCharacter::Input_AttackHeavy(const FInputActionValue& Value)
 {
 	Attack(FName("Attack2"));
 }
@@ -194,12 +189,23 @@ void ASlashCharacter::FinishedEquipping()
 	}
 }
 
+void ASlashCharacter::HitReactEnd()
+{
+	ActionState = ECharacterActionState::ECAS_Unoccupied;
+}
+
 void ASlashCharacter::Attack(FName Section)
 {
 	if (ActionState == ECharacterActionState::ECAS_Unoccupied &&
 		WeaponEquipedState != ECharacterWeaponEquipedState::ECWES_Unquipped)
 	{
-		PlayMontage(AttackMontage,Section);
+		PlayMontage(AttackMontage, Section);
 		ActionState = ECharacterActionState::ECAS_Attacking;
 	}
+}
+
+void ASlashCharacter::GetHit_Implementation(const AActor* InitiatingActor, const FVector& ImpactPoint)
+{
+	Super::GetHit_Implementation(InitiatingActor,ImpactPoint);
+	ActionState = ECharacterActionState::ECAS_HitReaction;
 }

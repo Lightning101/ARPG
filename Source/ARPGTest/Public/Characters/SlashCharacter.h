@@ -30,43 +30,40 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent) override;
-	/** <IHitInterface */
-	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
-	/** </IHitInterface */
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	//  Input Controls Start //
-	void Input_Move(const FInputActionValue &Value);
-	void Input_Look(const FInputActionValue &Value);
-	void Input_Pickup(const FInputActionValue &Value);
-	void Input_Attack(const FInputActionValue &Value);
-	void Input_AttackHeavy(const FInputActionValue &Value);
+	void Input_Move(const FInputActionValue& Value);
+	void Input_Look(const FInputActionValue& Value);
+	void Input_Pickup(const FInputActionValue& Value);
+	void Input_Attack(const FInputActionValue& Value);
+	void Input_AttackHeavy(const FInputActionValue& Value);
 
 	UPROPERTY(EditAnywhere, Category = "Input Mappings")
-	UInputMappingContext *DefaultInputMapping;
+	UInputMappingContext* DefaultInputMapping;
 	UPROPERTY(EditAnywhere, Category = "Input Mappings")
-	UInputAction *MoveAction;
+	UInputAction* MoveAction;
 	UPROPERTY(EditAnywhere, Category = "Input Mappings")
-	UInputAction *LookAction;
+	UInputAction* LookAction;
 	UPROPERTY(EditAnywhere, Category = "Input Mappings")
-	UInputAction *JumpAction;
+	UInputAction* JumpAction;
 	UPROPERTY(EditAnywhere, Category = "Input Mappings")
-	UInputAction *PickupAction;
+	UInputAction* PickupAction;
 	UPROPERTY(EditAnywhere, Category = "Input Mappings")
-	UInputAction *AttackAction;
+	UInputAction* AttackAction;
 	UPROPERTY(EditAnywhere, Category = "Input Mappings")
-	UInputAction *AttackHeavyAction;
+	UInputAction* AttackHeavyAction;
 
 	//  Input Controls End //
 
 
 
 	//  Animation Montages Start //
-	UPROPERTY(EditDefaultsOnly, Category="Montage")
+	UPROPERTY(EditDefaultsOnly, Category = "Montage")
 	UAnimMontage* EquipMontage;
 	//  Animation Montages End //
 
@@ -82,29 +79,33 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void FinishedEquipping();
 
+	UFUNCTION(BlueprintCallable)
+	void HitReactEnd();
+
 	virtual void Attack(FName Section) override;
+	virtual void GetHit_Implementation(const AActor* InitiatingActor, const FVector& ImpactPoint) override;
 
 
 private:
 	UPROPERTY(VisibleAnywhere)
-	USpringArmComponent *SpringArm;
+	USpringArmComponent* SpringArm;
 	UPROPERTY(VisibleAnywhere)
-	UCameraComponent *ViewCamera;
+	UCameraComponent* ViewCamera;
 
 	UPROPERTY(VisibleAnywhere, Category = "Hair")
-	UGroomComponent *Hair;
+	UGroomComponent* Hair;
 	UPROPERTY(VisibleAnywhere, Category = "Hair")
-	UGroomComponent *Eyebrows;
+	UGroomComponent* Eyebrows;
 
 	UPROPERTY(VisibleInstanceOnly)
-	AItem *OverlappingItem;
+	AItem* OverlappingItem;
 
-	ECharacterWeaponEquipedState WeaponEquipedState =  ECharacterWeaponEquipedState::ECWES_Unquipped;
-	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess="true"))
-	ECharacterActionState ActionState =  ECharacterActionState::ECAS_Unoccupied;
+	ECharacterWeaponEquipedState WeaponEquipedState = ECharacterWeaponEquipedState::ECWES_Unquipped;
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	ECharacterActionState ActionState = ECharacterActionState::ECAS_Unoccupied;
 
 public:
-	FORCEINLINE void SetOverlappingItem(AItem *Item) { OverlappingItem = Item; }
+	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
 
-	FORCEINLINE ECharacterWeaponEquipedState GetWeaponEquipedState()const{return WeaponEquipedState;}
+	FORCEINLINE ECharacterWeaponEquipedState GetWeaponEquipedState()const { return WeaponEquipedState; }
 };

@@ -125,20 +125,16 @@ void AEnemy::CheckCombatTarget()
 	}
 }
 
-void AEnemy::GetHit_Implementation(const FVector &ImpactPoint)
+void AEnemy::GetHit_Implementation(const AActor* InitiatingActor, const FVector& ImpactPoint)
 {
-	SetHealthBarVisibility(true);
-	if (IsAlive())
-		DirectionalHitReact(ImpactPoint);
-	else
-		Die();
-
-	PlayHitSound(ImpactPoint);
-	SpawnHitParticles(ImpactPoint);
+	Super::GetHit_Implementation(InitiatingActor,ImpactPoint);
+	ClearTimer(PatrolTimer);
+	SetHealthBarVisibility(EnemyState != EEnemyState::EES_Dead);
 }
 
 void AEnemy::Die()
 {
+	Super::Die();
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	SetHealthBarVisibility(false);
 	ClearTimer(AttackTimer);
@@ -189,7 +185,13 @@ float AEnemy::TakeDamage(float DamageAmount, struct FDamageEvent const &DamageEv
 {
 	HandleDamage(DamageAmount);
 	CombatTarget = EventInstigator->GetPawn();
-	ChaseTarget();
+	if (IsInTargetRange(CombatTarget, CombatRadius) ){
+		EnemyState = EEnemyState::EES_Attacking;
+	}
+	else {
+		ChaseTarget();
+	}
+	
 	return DamageAmount;
 }
 
