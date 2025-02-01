@@ -10,6 +10,7 @@
 #include "Item.h"
 #include "Items/Weapons/Weapon.h"
 #include "Animation/AnimMontage.h"
+#include "Components/StaticMeshComponent.h"
 
 // Sets default values
 ASlashCharacter::ASlashCharacter()
@@ -22,6 +23,12 @@ ASlashCharacter::ASlashCharacter()
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 360.f, 0.f);
+
+	GetMesh()->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+	GetMesh()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility,ECollisionResponse::ECR_Block);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
+	GetMesh()->SetGenerateOverlapEvents(true);
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
 	SpringArm->SetupAttachment(GetRootComponent());
@@ -37,6 +44,8 @@ ASlashCharacter::ASlashCharacter()
 	Eyebrows = CreateDefaultSubobject<UGroomComponent>(TEXT("Eyebrows"));
 	Eyebrows->SetupAttachment(GetMesh());
 	Eyebrows->AttachmentName = FString("head");
+
+
 }
 
 // Called when the game starts or when spawned
@@ -44,7 +53,7 @@ void ASlashCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Tags.Add(FName("SlashCharacter"));
+	Tags.Add(FName("EngageableTarget"));
 	if (APlayerController *PlayerController = Cast<APlayerController>(GetController()))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem *Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
@@ -77,6 +86,12 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputComp
 	EnhancedInputComponent->BindAction(AttackHeavyAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Input_AttackHeavy);
 }
 
+void ASlashCharacter::GetHit_Implementation(const FVector& ImpactPoint)
+{
+	PlayHitSound(ImpactPoint);
+	SpawnHitParticles(ImpactPoint);
+}
+
 void ASlashCharacter::Input_Move(const FInputActionValue &Value)
 {
 	if (Controller && ViewCamera)
@@ -90,11 +105,11 @@ void ASlashCharacter::Input_Move(const FInputActionValue &Value)
 
 		if (MoveVector.X != 0)
 		{
-			AddMovementInput(PlayerForward, MoveVector.X);
+			AddMovementInput(PlayerRight, MoveVector.X);
 		}
 		if (MoveVector.Y != 0)
 		{
-			AddMovementInput(PlayerRight, MoveVector.Y);
+			AddMovementInput(PlayerForward , MoveVector.Y);
 		}
 	}
 }

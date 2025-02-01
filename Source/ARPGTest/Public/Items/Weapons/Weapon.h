@@ -18,12 +18,11 @@ class ARPGTEST_API AWeapon : public AItem
 
 public:
 	AWeapon();
+	UFUNCTION(BlueprintCallable)
 	void Equip(USceneComponent *InParent, FName InSocketName, AActor* NewOwner, APawn* NewInsitgator);
-	// Overlap Events Start //
-	virtual void OnSphereOverlap(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult) override;
-	virtual void OnSphereOverlapEnd(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex) override;
 	UFUNCTION()
 	void OnBoxOverlap(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult);
+	void ExecuteBoxHit(FHitResult& HitResult);
 	// Overlap Events End //
 
 	// void OnBoxeOverlapEnd(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex)override;
@@ -51,6 +50,16 @@ private:
 
 	UPROPERTY(EditAnywhere, Category="Weapon Properties")
 	float Damage  = 20.f;
+
+	void PlayEquipSound();
+	void SetPickupEffectEnabled(bool bEnabled);
+	void SetSphereCollisionEnabled(bool bEnabled);
+
+	void BoxTrace(FHitResult& OutBoxHit);
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	FVector BoxTraceExtent = FVector(5.f);
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	bool bShowBoxDebug = false;
 
 	
 };

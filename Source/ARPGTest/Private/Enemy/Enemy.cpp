@@ -45,6 +45,7 @@ AEnemy::AEnemy()
 void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
+	Tags.Add(FName("Enemy"));
 	SetHealthBarVisibility(false);
 
 	EnemyController = Cast<AAIController>(GetController());
@@ -286,7 +287,7 @@ void AEnemy::OnPawnSeen(APawn *Pawn)
 {
 	const bool bShouldChaseTarget =
 		EnemyState == EEnemyState::EES_Patroling &&
-		Pawn->ActorHasTag(FName("SlashCharacter"));
+		Pawn->ActorHasTag(FName("EngageableTarget"));
 
 	if (bShouldChaseTarget)
 	{

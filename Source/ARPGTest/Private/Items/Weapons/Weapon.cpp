@@ -41,73 +41,102 @@ void AWeapon::BeginPlay()
 
 void AWeapon::Equip(USceneComponent *InParent, FName InSocketName, AActor *NewOwner, APawn *NewInsitgator)
 {
-
+    ItemState = EItemState::EIS_Equiped;
     SetOwner(NewOwner);
     SetInstigator(NewInsitgator);
     AttachMeshToSocket(InParent, FName("RightHandSocket"));
-    ItemState = EItemState::EIS_Equiped;
+    SetSphereCollisionEnabled(false);
+    SetPickupEffectEnabled(false);
+    PlayEquipSound();
+}
 
-    PickupEffect->Deactivate();
-    if (Sphere)
-    {
-        Sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+void AWeapon::SetPickupEffectEnabled(bool bEnabled)
+{
+    if (PickupEffect) {
+        if (bEnabled)
+            PickupEffect->Activate();
+        else
+        PickupEffect->Deactivate();
     }
+}
 
+void AWeapon::SetSphereCollisionEnabled(bool bEnabled)
+{
+	if (Sphere)
+	{
+		if (bEnabled)
+			Sphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		else
+			Sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+}
+
+void AWeapon::BoxTrace(FHitResult& OutBoxHit)
+{
+	const FVector Start = BoxTraceStart->GetComponentLocation();
+	const FVector End = BoxTraceEnd->GetComponentLocation();
+
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(this);
+    if (Owner)
+        ActorsToIgnore.Add(Owner);
+
+
+	for (AActor* Actor : IgnoreActors)
+		ActorsToIgnore.AddUnique(Actor);
+
+	UKismetSystemLibrary::BoxTraceSingle(
+		this,
+		Start,
+		End,
+		FVector(5.f),
+		BoxTraceStart->GetComponentRotation(),
+		ETraceTypeQuery::TraceTypeQuery1,
+		false,
+		ActorsToIgnore,
+		bShowBoxDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None,
+		OutBoxHit,
+		true);
+	IgnoreActors.AddUnique(OutBoxHit.GetActor());
+
+}
+
+void AWeapon::PlayEquipSound()
+{
     if (EquipSound)
     {
         UGameplayStatics::PlaySoundAtLocation(this, EquipSound, GetActorLocation());
     }
 }
 
-void AWeapon::OnSphereOverlap(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
-{
-    Super::OnSphereOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
-}
-
-void AWeapon::OnSphereOverlapEnd(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex)
-{
-    Super::OnSphereOverlapEnd(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
-}
-
 void AWeapon::OnBoxOverlap(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
-    const FVector Start = BoxTraceStart->GetComponentLocation();
-    const FVector End = BoxTraceEnd->GetComponentLocation();
+    // Ignore other enemies
+    if (GetOwner()->ActorHasTag(TEXT("Enemy")) && OtherActor->ActorHasTag(TEXT("Enemy")))return;
 
-    TArray<AActor *> ActorsToIgnore;
-    ActorsToIgnore.Add(this);
     FHitResult HitResult;
-
-    for (AActor *Actor : IgnoreActors)
-        ActorsToIgnore.AddUnique(Actor);
-
-    UKismetSystemLibrary::BoxTraceSingle(
-        this,
-        Start,
-        End,
-        FVector(5.f),
-        BoxTraceStart->GetComponentRotation(),
-        ETraceTypeQuery::TraceTypeQuery1,
-        false,
-        ActorsToIgnore,
-        EDrawDebugTrace::None,
-        HitResult,
-        true);
-
+    BoxTrace(HitResult);
     if (HitResult.GetActor())
     {
+        // Ignore other enemies
+        if (GetOwner()->ActorHasTag(TEXT("Enemy")) && HitResult.GetActor()->ActorHasTag(TEXT("Enemy")))return;
+        
+
         UGameplayStatics::ApplyDamage(
             HitResult.GetActor(),
             Damage, GetInstigator()->GetController(),
             this,
             UDamageType::StaticClass());
 
-        if (IHitInterface *HitInterface = Cast<IHitInterface>(HitResult.GetActor()))
-        {
-
-            IgnoreActors.AddUnique(HitResult.GetActor());
-            HitInterface->Execute_GetHit(HitResult.GetActor(), HitResult.ImpactPoint);
-        }
+        ExecuteBoxHit(HitResult);
         CreateFields(HitResult.ImpactPoint);
     }
+}
+
+void AWeapon::ExecuteBoxHit(FHitResult& HitResult)
+{
+	if (IHitInterface* HitInterface = Cast<IHitInterface>(HitResult.GetActor()))
+	{
+		HitInterface->Execute_GetHit(HitResult.GetActor(), HitResult.ImpactPoint);
+	}
 }
