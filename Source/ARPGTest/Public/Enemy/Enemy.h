@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Characters/BaseCharacter.h"
-#include "Characters/CharacterTypes.h"
 #include "Enemy.generated.h"
 
 class UHealthBarComponent;
 class AAIController;
 class UPawnSensingComponent;
 class AWeapon;
+class ASoul;
 
 UCLASS()
 class ARPGTEST_API AEnemy : public ABaseCharacter
@@ -51,6 +51,7 @@ public:
 protected:
 	// ABaseCharacter Overrides Start //
 	virtual void Die() override;
+	void SpawnSoul();
 	virtual void Attack(FName Section) override;
 	virtual void AttackEnd() override;
 	virtual void HandleDamage(float DamageAmmount) override;
@@ -59,8 +60,7 @@ protected:
 	// ABaseCharacter Overrides End //
 
 	// Enemy States Start //
-	UPROPERTY(BlueprintReadOnly)
-	EDeathPose DeathPose;
+
 	UPROPERTY(BlueprintReadOnly)
 	EEnemyState EnemyState = EEnemyState::EES_Patroling;
 
@@ -136,6 +136,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	float DeathLifeSpan = 8.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<ASoul> SoulClass;
 	// Combat End
 
 	/**

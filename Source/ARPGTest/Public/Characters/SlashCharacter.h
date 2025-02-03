@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "BaseCharacter.h"
 #include "InputActionValue.h"
-#include "Characters/CharacterTypes.h"
+#include "Interfaces/PickupInterface.h"
 #include "SlashCharacter.generated.h"
 
 class USpringArmComponent;
@@ -15,11 +15,13 @@ class UInputAction;
 class UGroomComponent;
 class AItem;
 class UAnimMontage;
+class USlashOverlay;
+enum class AttributeUpdateProperties : uint8;
 
 
 
 
-UCLASS() class ARPGTEST_API ASlashCharacter : public ABaseCharacter
+UCLASS() class ARPGTEST_API ASlashCharacter : public ABaseCharacter, public IPickupInterface
 {
 	GENERATED_BODY()
 
@@ -31,17 +33,32 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+	FORCEINLINE ECharacterActionState GetActionState() const { return ActionState; };
+	FORCEINLINE EDeathPose GetDeathPose() const { return DeathPose; };
+
+	void SetOverlappingItem(AItem* Item) override;
+	void AddSouls(ASoul* Soul) override;
+	void AddGold(ATreasure* Treasure);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	void InitializeEnhancedInputMapping(APlayerController* PlayerController);
+
+	void InitializeSlashOverlay(APlayerController* PlayerController);
+
 	//  Input Controls Start //
 	void Input_Move(const FInputActionValue& Value);
+	bool CanMove();
 	void Input_Look(const FInputActionValue& Value);
 	void Input_Pickup(const FInputActionValue& Value);
 	void Input_Attack(const FInputActionValue& Value);
 	void Input_AttackHeavy(const FInputActionValue& Value);
+	void Input_Dodge(const FInputActionValue& Value);
+
+	bool CanDodge();
 
 	UPROPERTY(EditAnywhere, Category = "Input Mappings")
 	UInputMappingContext* DefaultInputMapping;
@@ -57,6 +74,8 @@ protected:
 	UInputAction* AttackAction;
 	UPROPERTY(EditAnywhere, Category = "Input Mappings")
 	UInputAction* AttackHeavyAction;
+	UPROPERTY(EditAnywhere, Category = "Input Mappings")
+	UInputAction* DodgeAction;
 
 	//  Input Controls End //
 
@@ -65,11 +84,14 @@ protected:
 	//  Animation Montages Start //
 	UPROPERTY(EditDefaultsOnly, Category = "Montage")
 	UAnimMontage* EquipMontage;
+		UPROPERTY(EditDefaultsOnly, Category = "Montage")
+	UAnimMontage* DodgeMontage;
 	//  Animation Montages End //
 
 	//  Animation Play Montages  Start //
 
 	virtual void AttackEnd() override;
+	virtual void DodgeEnd() override;
 
 	//  Animation Play Montages  End//
 	UFUNCTION(BlueprintCallable)
@@ -83,7 +105,10 @@ protected:
 	void HitReactEnd();
 
 	virtual void Attack(FName Section) override;
+	bool CanAttack();
 	virtual void GetHit_Implementation(const AActor* InitiatingActor, const FVector& ImpactPoint) override;
+
+	virtual void Die() override;
 
 
 private:
@@ -104,8 +129,13 @@ private:
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	ECharacterActionState ActionState = ECharacterActionState::ECAS_Unoccupied;
 
-public:
-	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
+	UPROPERTY()
+	USlashOverlay* SlashOverlay;
+	void UpdateHUDAttribute(AttributeUpdateProperties AttributeProperty);
 
+	UPROPERTY(EditAnywhere, Category="Combat")
+	float DodgeStaminaCost = 10.f;
+
+public:
 	FORCEINLINE ECharacterWeaponEquipedState GetWeaponEquipedState()const { return WeaponEquipedState; }
 };

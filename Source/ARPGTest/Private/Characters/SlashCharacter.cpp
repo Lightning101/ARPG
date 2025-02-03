@@ -11,6 +11,18 @@
 #include "Items/Weapons/Weapon.h"
 #include "Animation/AnimMontage.h"
 #include "Components/StaticMeshComponent.h"
+#include "HUD/SlashHUD.h"
+#include "HUD/SlashOverlay.h"
+#include "Components/AttributeComponent.h"
+#include "Items/Treasure/Treasure.h"
+#include "Items/Soul.h"
+
+enum class AttributeUpdateProperties : uint8 {
+	AUP_Health,
+	AUP_Stamina,
+	AUP_Gold,
+	AUP_Souls
+};
 
 // Sets default values
 ASlashCharacter::ASlashCharacter()
@@ -48,6 +60,27 @@ ASlashCharacter::ASlashCharacter()
 
 }
 
+void ASlashCharacter::SetOverlappingItem(AItem* Item)
+{
+	OverlappingItem = Item;
+}
+
+void ASlashCharacter::AddSouls(ASoul* Soul)
+{
+	if (Attributes && Soul) {
+		Attributes->AddSouls(Soul->GetSouls());
+		UpdateHUDAttribute(AttributeUpdateProperties::AUP_Souls);
+	}
+}
+
+void ASlashCharacter::AddGold(ATreasure* Treasure)
+{
+	if (Attributes && Treasure) {
+		Attributes->AddGold(Treasure->GetGold());
+		UpdateHUDAttribute(AttributeUpdateProperties::AUP_Gold);
+	}
+}
+
 // Called when the game starts or when spawned
 void ASlashCharacter::BeginPlay()
 {
@@ -56,12 +89,28 @@ void ASlashCharacter::BeginPlay()
 	Tags.Add(FName("EngageableTarget"));
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		InitializeEnhancedInputMapping(PlayerController);
+		InitializeSlashOverlay(PlayerController);
+	}
+}
+
+void ASlashCharacter::InitializeEnhancedInputMapping(APlayerController* PlayerController)
+{
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+	{
+		if (DefaultInputMapping)
 		{
-			if (DefaultInputMapping)
-			{
-				Subsystem->AddMappingContext(DefaultInputMapping, 0);
-			}
+			Subsystem->AddMappingContext(DefaultInputMapping, 0);
+		}
+	}
+}
+
+void ASlashCharacter::InitializeSlashOverlay(APlayerController* PlayerController)
+{
+	if (ASlashHUD* SlashHUD = Cast<ASlashHUD>(PlayerController->GetHUD())) {
+		SlashOverlay = SlashHUD->GetSlashOverlay();
+		if (SlashOverlay && Attributes) {
+			SlashOverlay->SetHealthBarPercent(Attributes->GetPercentageHealth());
 		}
 	}
 }
@@ -70,6 +119,10 @@ void ASlashCharacter::BeginPlay()
 void ASlashCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (Attributes) {
+		Attributes->RegenStamina(DeltaTime);
+		UpdateHUDAttribute(AttributeUpdateProperties::AUP_Stamina);
+	}
 }
 
 // Called to bind functionality to input
@@ -84,10 +137,43 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	EnhancedInputComponent->BindAction(PickupAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Input_Pickup);
 	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Input_Attack);
 	EnhancedInputComponent->BindAction(AttackHeavyAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Input_AttackHeavy);
+	EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Input_Dodge);
+}
+
+float ASlashCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	HandleDamage(DamageAmount);
+	UpdateHUDAttribute(AttributeUpdateProperties::AUP_Health);
+	return DamageAmount;
+}
+
+void ASlashCharacter::UpdateHUDAttribute(AttributeUpdateProperties AttributeProperty)
+{
+	if (SlashOverlay && Attributes) {
+		switch (AttributeProperty)
+		{
+		case AttributeUpdateProperties::AUP_Health:
+			SlashOverlay->SetHealthBarPercent(Attributes->GetPercentageHealth());
+			break;
+			case AttributeUpdateProperties::AUP_Stamina:
+				SlashOverlay->SetStaminaBarPercent(Attributes->GetPercentageStamina());
+				break;
+		case AttributeUpdateProperties::AUP_Gold:
+			SlashOverlay->SetGold(Attributes->GetGold());
+			break;
+		case AttributeUpdateProperties::AUP_Souls:
+			SlashOverlay->SetSouls(Attributes->GetSouls());
+			break;
+		default:
+			break;
+		}
+
+	}
 }
 
 void ASlashCharacter::Input_Move(const FInputActionValue& Value)
 {
+	if (!CanMove())return;
 	if (Controller && ViewCamera)
 	{
 		FVector2D MoveVector = Value.Get<FVector2D>();
@@ -106,6 +192,11 @@ void ASlashCharacter::Input_Move(const FInputActionValue& Value)
 			AddMovementInput(PlayerRight, MoveVector.Y);
 		}
 	}
+}
+bool ASlashCharacter::CanMove()
+{
+	return ActionState != ECharacterActionState::ECAS_Dead &&
+		ActionState != ECharacterActionState::ECAS_Dodging;
 }
 void ASlashCharacter::Input_Look(const FInputActionValue& Value)
 {
@@ -160,9 +251,33 @@ void ASlashCharacter::Input_AttackHeavy(const FInputActionValue& Value)
 	Attack(FName("Attack2"));
 }
 
+void ASlashCharacter::Input_Dodge(const FInputActionValue& Value)
+{
+	if (!CanDodge()) return;
+	ActionState = ECharacterActionState::ECAS_Dodging;
+	if (DodgeMontage) {
+		Attributes->ReduceStamina(DodgeStaminaCost);
+		PlayMontage(DodgeMontage, FName());
+		UpdateHUDAttribute(AttributeUpdateProperties::AUP_Stamina);
+	}
+}
+
+bool ASlashCharacter::CanDodge()
+{
+	return ActionState == ECharacterActionState::ECAS_Unoccupied &&
+		Attributes &&
+		Attributes->GetStamina() > DodgeStaminaCost;
+}
+
 void ASlashCharacter::AttackEnd()
 {
 
+	ActionState = ECharacterActionState::ECAS_Unoccupied;
+}
+
+void ASlashCharacter::DodgeEnd()
+{
+	Super::DodgeEnd();
 	ActionState = ECharacterActionState::ECAS_Unoccupied;
 }
 
@@ -196,16 +311,30 @@ void ASlashCharacter::HitReactEnd()
 
 void ASlashCharacter::Attack(FName Section)
 {
-	if (ActionState == ECharacterActionState::ECAS_Unoccupied &&
-		WeaponEquipedState != ECharacterWeaponEquipedState::ECWES_Unquipped)
+	//Super::Attack(Section);
+	//if (CombatTarget == nullptr) return;
+	if (CanAttack())
 	{
 		PlayMontage(AttackMontage, Section);
 		ActionState = ECharacterActionState::ECAS_Attacking;
 	}
 }
 
+bool ASlashCharacter::CanAttack()
+{
+	return ActionState == ECharacterActionState::ECAS_Unoccupied &&
+		WeaponEquipedState != ECharacterWeaponEquipedState::ECWES_Unquipped;
+}
+
 void ASlashCharacter::GetHit_Implementation(const AActor* InitiatingActor, const FVector& ImpactPoint)
 {
-	Super::GetHit_Implementation(InitiatingActor,ImpactPoint);
-	ActionState = ECharacterActionState::ECAS_HitReaction;
+	Super::GetHit_Implementation(InitiatingActor, ImpactPoint);
+	if (IsAlive())
+		ActionState = ECharacterActionState::ECAS_HitReaction;
+}
+
+void ASlashCharacter::Die()
+{
+	Super::Die();
+	ActionState = ECharacterActionState::ECAS_Dead;
 }

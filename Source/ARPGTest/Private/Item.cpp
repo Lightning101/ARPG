@@ -7,6 +7,7 @@
 #include "Components/SphereComponent.h"
 #include "Characters/SlashCharacter.h"
 #include "NiagaraComponent.h"
+#include "Interfaces/PickupInterface.h"
 
 // Sets default values
 AItem::AItem()
@@ -47,19 +48,19 @@ float AItem::TransformedCos(float Value) const
 void AItem::OnSphereOverlap(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
 
-	ASlashCharacter *SlashCharacter = Cast<ASlashCharacter>(OtherActor);
-	if (SlashCharacter)
+	IPickupInterface* PickupActor  = Cast<IPickupInterface>(OtherActor);
+	if (PickupActor)
 	{
-		SlashCharacter->SetOverlappingItem(this);
+		PickupActor->SetOverlappingItem(this);
 	}
 }
 
 void AItem::OnSphereOverlapEnd(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex)
 {
-	ASlashCharacter *SlashCharacter = Cast<ASlashCharacter>(OtherActor);
-	if (SlashCharacter)
+	IPickupInterface* PickupActor = Cast<IPickupInterface>(OtherActor);
+	if (PickupActor)
 	{
-		SlashCharacter->SetOverlappingItem(nullptr);
+		PickupActor->SetOverlappingItem(nullptr);
 	}
 }
 

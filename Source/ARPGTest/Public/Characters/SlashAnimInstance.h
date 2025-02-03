@@ -15,7 +15,7 @@ class UCharacterMovementComponent;
 
 
 /**
- * 
+ *
  */
 UCLASS()
 class ARPGTEST_API USlashAnimInstance : public UAnimInstance
@@ -30,14 +30,20 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	ASlashCharacter* SlashCharacter;
 
-	UPROPERTY(BlueprintReadOnly, Category="Movement")
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	UCharacterMovementComponent* MovementComponent;
 
-	UPROPERTY(BlueprintReadOnly, Category="Movement")
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	float GroundSpeed;
-	UPROPERTY(BlueprintReadOnly, Category="Movement")
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool IsFalling;
-	UPROPERTY(BlueprintReadOnly, Category="Movement | Character State")
+	UPROPERTY(BlueprintReadOnly, Category = "Movement | Character State")
 	ECharacterWeaponEquipedState CharacterWeaponEquipedState;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Action State")
+	ECharacterActionState ActionState;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Character State")
+	EDeathPose DeathPose;
 
 };

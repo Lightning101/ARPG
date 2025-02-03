@@ -32,9 +32,25 @@ void ABaseCharacter::SetWeaponCollisionEnabled(ECollisionEnabled::Type Collision
 	}
 }
 
+void ABaseCharacter::Attack(FName Section)
+{
+	if (CombatTarget && CombatTarget->ActorHasTag(FName("Dead"))) {
+		CombatTarget = nullptr;
+	}
+}
+
 void ABaseCharacter::Die()
 {
 	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
+	PlayDeathMontage();
+	DisableMeshCollision();
+	Tags.Add(FName(TEXT("Dead")));
+}
+
+void ABaseCharacter::DisableMeshCollision()
+{
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetGenerateOverlapEvents(false);
 }
 
 bool ABaseCharacter::IsAlive()
@@ -123,6 +139,10 @@ void ABaseCharacter::AttackEnd()
 {
 }
 
+void ABaseCharacter::DodgeEnd()
+{
+}
+
 FVector ABaseCharacter::UpdateTranslationWarping() const
 {
 	if (CombatTarget) {
@@ -132,6 +152,17 @@ FVector ABaseCharacter::UpdateTranslationWarping() const
 		return CombatTargetLocation + Location;
 	}
 	return FVector();
+}
+
+void ABaseCharacter::PlayDeathMontage()
+{
+	if (DeathMontage && DeathMontage->GetNumSections() > 0)
+	{
+		int32 SectionIndex = FMath::RandRange(1, DeathMontage->GetNumSections());
+		DeathPose = static_cast<EDeathPose>(SectionIndex - 1);
+		FString SectionName = FString::Printf(TEXT("Death%d"), SectionIndex);
+		PlayMontage(DeathMontage, FName(*SectionName));
+	}
 }
 
 FVector ABaseCharacter::UpdateRotationWarping() const

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/HitInterface.h"
+#include <Characters/CharacterTypes.h>
 #include "BaseCharacter.generated.h"
 
 class AWeapon;
@@ -35,18 +36,22 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere)
 	AWeapon* EquippedWeapon;
-	virtual void Attack(FName Section) {};
+	virtual void Attack(FName Section);
 	virtual void Die();
+	void DisableMeshCollision();
 	bool IsAlive();
 
 	virtual void GetHit_Implementation(const AActor* InitiatingActor, const FVector& ImpactPoint) override;
 
 	void PlayMontage(UAnimMontage* Montage, const FName& Selection) const;
 	void StopMontage(UAnimMontage* Montage);
+	void PlayDeathMontage();
 	virtual void DirectionalHitReact(const FVector& ImpactPoint);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void AttackEnd();
+	UFUNCTION(BlueprintCallable)
+	virtual void DodgeEnd();
 	UFUNCTION(BlueprintCallable)
 	FVector UpdateTranslationWarping() const;
 	UFUNCTION(BlueprintCallable)
@@ -72,6 +77,9 @@ protected:
 	UAttributeComponent* Attributes;
 	// Components End //
 
+	UPROPERTY(BlueprintReadOnly)
+	EDeathPose DeathPose;
+
 
 
 private:
@@ -80,7 +88,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Sound")
 	USoundBase* HitSound;
 
-	
-	UPROPERTY(EditAnywhere, Category="Combat")
-	float MotionWarpingTranslationBuffer= 75.f;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float MotionWarpingTranslationBuffer = 75.f;
 };

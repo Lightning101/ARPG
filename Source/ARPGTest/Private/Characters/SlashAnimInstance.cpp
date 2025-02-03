@@ -25,5 +25,7 @@ void USlashAnimInstance::NativeUpdateAnimation(float Deltatime)
         IsFalling = MovementComponent->IsFalling();
 
         CharacterWeaponEquipedState = SlashCharacter->GetWeaponEquipedState();
+        ActionState = SlashCharacter->GetActionState();
+        DeathPose = SlashCharacter->GetDeathPose();
     }
 }

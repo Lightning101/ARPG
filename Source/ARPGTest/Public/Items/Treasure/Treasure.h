@@ -17,7 +17,7 @@ class ARPGTEST_API ATreasure : public AItem
 public:
 	UPROPERTY(EditAnywhere)
 	float DropChance = 0.5f;
-
+	FORCEINLINE int32 GetGold()const { return Gold; }
 
 protected:
 
@@ -26,6 +26,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Sound")
 	USoundBase *PickupSound;
 
-	UPROPERTY(EditAnywhere)
-	int32 GoldValue = 5;
+	UPROPERTY(EditAnywhere, Category="Treasure Properties")
+	int32 Gold = 5;
 };
