@@ -106,7 +106,7 @@ protected:
 
 	virtual void Attack(FName Section) override;
 	bool CanAttack();
-	virtual void GetHit_Implementation(const AActor* InitiatingActor, const FVector& ImpactPoint) override;
+	void GetHit_Implementation(AActor* InitiatingActor, const FVector& ImpactPoint) override;
 
 	virtual void Die() override;
 

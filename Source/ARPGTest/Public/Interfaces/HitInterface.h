@@ -23,5 +23,5 @@ class ARPGTEST_API IHitInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	UFUNCTION(BlueprintNativeEvent)
-	void GetHit(const AActor* InitiatingActor,const FVector& ImpactPoint);
+	void GetHit(AActor* InitiatingActor,const FVector& ImpactPoint);
 };

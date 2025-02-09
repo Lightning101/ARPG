@@ -61,7 +61,7 @@ void AEnemy::BeginPlay()
 	if (World && WeaponClass)
 	{
 		AWeapon* Weapon = World->SpawnActor<AWeapon>(WeaponClass);
-		Weapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
+		Weapon->Equip(GetMesh(), FName("WeaponSocket"), this, this);
 		EquippedWeapon = Weapon;
 	}
 }
@@ -126,11 +126,18 @@ void AEnemy::CheckCombatTarget()
 	}
 }
 
-void AEnemy::GetHit_Implementation(const AActor* InitiatingActor, const FVector& ImpactPoint)
+void AEnemy::GetHit_Implementation(AActor* InitiatingActor, const FVector& ImpactPoint)
 {
 	Super::GetHit_Implementation(InitiatingActor, ImpactPoint);
 	ClearTimer(PatrolTimer);
 	SetHealthBarVisibility(EnemyState != EEnemyState::EES_Dead);
+	if (IsAlive() && IsInTargetRange(CombatTarget, AttackRadius)) {
+
+		StartAttackTimer();
+	}
+	else {
+		ChaseTarget();
+	}
 }
 
 void AEnemy::Die()
@@ -145,7 +152,6 @@ void AEnemy::Die()
 	EnemyState = EEnemyState::EES_Dead;
 	PlayDeathMontage();
 	SpawnSoul();
-
 }
 
 void AEnemy::SpawnSoul()
@@ -159,7 +165,7 @@ void AEnemy::SpawnSoul()
 		if (Soul) {
 			Soul->SetSouls(Attributes->GetSouls());
 		}
-			
+
 	}
 }
 

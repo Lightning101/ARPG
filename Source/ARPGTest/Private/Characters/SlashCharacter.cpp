@@ -210,10 +210,14 @@ void ASlashCharacter::Input_Pickup(const FInputActionValue& Value)
 
 	if (AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem))
 	{
+		if (EquippedWeapon) {
+			EquippedWeapon->Destroy();
+		}
 		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
 		WeaponEquipedState = ECharacterWeaponEquipedState::ECWES_EquippedOneHandedWeapon;
 		OverlappingItem = nullptr;
 		EquippedWeapon = OverlappingWeapon;
+
 	}
 	else if (EquippedWeapon)
 	{
@@ -259,6 +263,8 @@ void ASlashCharacter::Input_Dodge(const FInputActionValue& Value)
 		Attributes->ReduceStamina(DodgeStaminaCost);
 		PlayMontage(DodgeMontage, FName());
 		UpdateHUDAttribute(AttributeUpdateProperties::AUP_Stamina);
+		GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		GetMesh()->SetGenerateOverlapEvents(false);
 	}
 }
 
@@ -279,6 +285,8 @@ void ASlashCharacter::DodgeEnd()
 {
 	Super::DodgeEnd();
 	ActionState = ECharacterActionState::ECAS_Unoccupied;
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	GetMesh()->SetGenerateOverlapEvents(true);
 }
 
 void ASlashCharacter::Disarm()
@@ -326,7 +334,7 @@ bool ASlashCharacter::CanAttack()
 		WeaponEquipedState != ECharacterWeaponEquipedState::ECWES_Unquipped;
 }
 
-void ASlashCharacter::GetHit_Implementation(const AActor* InitiatingActor, const FVector& ImpactPoint)
+void ASlashCharacter::GetHit_Implementation(AActor* InitiatingActor, const FVector& ImpactPoint)
 {
 	Super::GetHit_Implementation(InitiatingActor, ImpactPoint);
 	if (IsAlive())

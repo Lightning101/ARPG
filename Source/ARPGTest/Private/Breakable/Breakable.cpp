@@ -64,7 +64,7 @@ void ABreakable::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void ABreakable::GetHit_Implementation(const AActor* InitiatingActor, const FVector& ImpactPoint)
+void ABreakable::GetHit_Implementation(AActor* InitiatingActor, const FVector& ImpactPoint)
 {
 	// UWorld *World = GetWorld();
 	// if (TreasureClass && World)

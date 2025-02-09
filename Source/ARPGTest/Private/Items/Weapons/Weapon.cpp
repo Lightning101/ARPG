@@ -44,7 +44,7 @@ void AWeapon::Equip(USceneComponent *InParent, FName InSocketName, AActor *NewOw
     ItemState = EItemState::EIS_Equiped;
     SetOwner(NewOwner);
     SetInstigator(NewInsitgator);
-    AttachMeshToSocket(InParent, FName("RightHandSocket"));
+    AttachMeshToSocket(InParent, InSocketName);
     SetSphereCollisionEnabled(false);
     SetPickupEffectEnabled(false);
     PlayEquipSound();
@@ -89,7 +89,7 @@ void AWeapon::BoxTrace(FHitResult& OutBoxHit)
 		this,
 		Start,
 		End,
-		FVector(5.f),
+        BoxTraceExtent,
 		BoxTraceStart->GetComponentRotation(),
 		ETraceTypeQuery::TraceTypeQuery1,
 		false,

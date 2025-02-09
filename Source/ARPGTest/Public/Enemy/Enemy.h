@@ -39,7 +39,7 @@ public:
 	//  Combat  Start
 
 	/** <IHitInterface */
-	virtual void GetHit_Implementation(const AActor* InitiatingActor, const FVector& ImpactPoint) override;
+	void GetHit_Implementation(AActor* InitiatingActor, const FVector& ImpactPoint) override;
 	/** </IHitInterface */
 
 	UPROPERTY(EditAnywhere, Category = "Combat")

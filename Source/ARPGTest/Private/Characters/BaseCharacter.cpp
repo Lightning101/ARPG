@@ -57,12 +57,13 @@ bool ABaseCharacter::IsAlive()
 {
 	return Attributes && Attributes->IsAlive();
 }
-void ABaseCharacter::GetHit_Implementation(const AActor* InitiatingActor, const FVector& ImpactPoint)
+void ABaseCharacter::GetHit_Implementation(AActor* InitiatingActor, const FVector& ImpactPoint)
 {
 	if (IsAlive() && InitiatingActor)
 		DirectionalHitReact(InitiatingActor->GetActorLocation());
 	else
 		Die();
+	CombatTarget = InitiatingActor;
 
 	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
 	StopMontage(AttackMontage);

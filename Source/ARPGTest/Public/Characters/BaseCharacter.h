@@ -41,7 +41,7 @@ protected:
 	void DisableMeshCollision();
 	bool IsAlive();
 
-	virtual void GetHit_Implementation(const AActor* InitiatingActor, const FVector& ImpactPoint) override;
+	void GetHit_Implementation(AActor* InitiatingActor, const FVector& ImpactPoint) override;
 
 	void PlayMontage(UAnimMontage* Montage, const FName& Selection) const;
 	void StopMontage(UAnimMontage* Montage);
